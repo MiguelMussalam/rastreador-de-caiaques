@@ -32,7 +32,7 @@ void loop() {
 
   // --- INÍCIO DO ENVIO ---
   LoRa.beginPacket();         // Abre o pacote para escrita
-  LoRa.print("Mensagem LoRa #"); 
+  LoRa.print("Olá LORA #"); 
   LoRa.print(counter);        // Envia o valor do contador
   LoRa.endPacket();           // Fecha o pacote e envia via rádio
   // --- FIM DO ENVIO ---
