@@ -1,39 +1,42 @@
-#include <TinyGPS++.h> // Biblioteca para decodificar dados NMEA
+#include <SPI.h>    // Biblioteca para comunicação SPI
+#include <LoRa.h>   // Biblioteca do rádio LoRa
 
-// --- MAPEAMENTO DE PINOS GPS NEO-6M ---
-// GPS TX -> ESP32 GPIO 16 (RX2)
-// GPS RX -> ESP32 GPIO 17 (TX2)
-#define RXD2 16
-#define TXD2 17
+// --- MAPEAMENTO DE PINOS LORA RA-02 (Igual ao seu Receptor) ---
+const int csPin = 5;          // NSS (Chip Select)
+const int resetPin = 14;       // RST (Reset)
+const int irqPin = 2;          // DIO0 (Interrupção)
 
-TinyGPSPlus gps;              // Cria o objeto de controle do GPS
+int counter = 0;
 
 void setup() {
-  Serial.begin(115200);       // Monitor Serial (USB)
+  Serial.begin(115200);       // Inicia monitor serial
+  while (!Serial);            // Aguarda a conexão USB
+
+  Serial.println("--- TESTE 1.1: EMISSOR LORA ---");
+
+  // Configura os pinos do rádio conforme sua montagem
+  LoRa.setPins(csPin, resetPin, irqPin);
+
+  // Inicializa o rádio em 433MHz (Mesma frequência do receptor)
+  if (!LoRa.begin(433E6)) {   
+    Serial.println("ERRO: Hardware LoRa não encontrado!");
+    while (1);                // Trava o código se houver erro
+  }
   
-  // Inicia a Serial2 dedicada ao GPS na velocidade de 9600 bps
-  Serial2.begin(9600, SERIAL_8N1, RXD2, TXD2);
-  
-  Serial.println("--- TESTE 2.2: LEITURA GPS ---");
+  Serial.println("LoRa pronto para transmitir!");
 }
 
 void loop() {
-  // Lê cada caractere vindo do módulo GPS
-  while (Serial2.available() > 0) {
-    // Alimenta o 'cérebro' da biblioteca com os dados brutos
-    gps.encode(Serial2.read());
-  }
+  Serial.print("Transmitindo pacote: ");
+  Serial.println(counter);
 
-  // Se a biblioteca conseguir decodificar uma localização válida e nova
-  if (gps.location.isUpdated()) {
-    Serial.print("Sats: "); Serial.print(gps.satellites.value());
-    Serial.print(" | Lat: "); Serial.print(gps.location.lat(), 6);
-    Serial.print(" | Lon: "); Serial.println(gps.location.lng(), 6);
-  }
+  // --- INÍCIO DO ENVIO ---
+  LoRa.beginPacket();         // Abre o pacote para escrita
+  LoRa.print("Mensagem LoRa #"); 
+  LoRa.print(counter);        // Envia o valor do contador
+  LoRa.endPacket();           // Fecha o pacote e envia via rádio
+  // --- FIM DO ENVIO ---
 
-  // Alerta de erro se não houver comunicação elétrica com o GPS
-  if (millis() > 5000 && gps.charsProcessed() < 10) {
-    Serial.println("ERRO: GPS não detectado. Verifique os fios TX/RX!");
-    delay(5000);
-  }
+  counter++;
+  delay(1000);                // Envia a cada 5 segundos
 }
