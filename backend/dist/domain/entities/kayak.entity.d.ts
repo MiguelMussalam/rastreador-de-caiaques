@@ -1,0 +1,15 @@
+export declare enum KayakStatus {
+    AVAILABLE = "AVAILABLE",
+    IN_USE = "IN_USE",
+    MAINTENANCE = "MAINTENANCE",
+    ALERT = "ALERT"
+}
+export declare class Kayak {
+    id: string;
+    code: string;
+    name: string;
+    status: KayakStatus;
+    active: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+}
