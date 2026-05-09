@@ -10,9 +10,7 @@
 const char* SSID     = "iPhone";
 const char* PASSWORD = "pedro123";
 
-// URL do backend no Railway (troque pela URL real após o deploy)
-// Exemplo: "https://rastreador-backend-production.up.railway.app/api/tracking"
-const char* BACKEND_URL = "https://SEU-BACKEND.railway.app/api/tracking";
+const char* BACKEND_URL = "https://rastreador-de-caiaques.onrender.com/api/tracking";
 // ============================================================
 
 LoRa_E32 e32ttl(&Serial2, 15, 4, 5);
