@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monitoramento Xtreme</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0; padding: 0; font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: white; display: flex; justify-content: center; align-items: center; height: 100vh;
+    }
+    .container {
+      background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(10px);
+      padding: 35px 25px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+      width: 90%; max-width: 420px; border: 1px solid rgba(0, 210, 255, 0.2); text-align: center;
+    }
+    .header h2 { margin: 0 0 20px 0; color: #00d2ff; font-weight: 700; font-size: 26px; }
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 8px; background: rgba(0, 255, 136, 0.15);
+      padding: 6px 16px; border-radius: 30px; font-size: 13px; font-weight: 600;
+      color: #00ff88; margin-bottom: 30px; border: 1px solid rgba(0, 255, 136, 0.3);
+    }
+    .pulse {
+      width: 10px; height: 10px; background: #00ff88; border-radius: 50%; box-shadow: 0 0 10px #00ff88;
+      animation: pulse-animation 1.5s infinite;
+    }
+    @keyframes pulse-animation {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(0, 255, 136, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 255, 136, 0); }
+    }
+    .data-card {
+      background: rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 20px;
+      border-left: 4px solid #00d2ff; text-align: left;
+    }
+    .data-title { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px; }
+    .data-value { font-family: 'Courier New', Courier, monospace; font-size: 18px; color: #f8fafc; line-height: 1.8; font-weight: 600; }
+    .footer { margin-top: 25px; font-size: 12px; color: #64748b; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header"><h2>🛰️ Base LoRa</h2></div>
+    
+    <div class="status-badge">
+      <div class="pulse"></div> ONLINE <span class="ip-text" id="ip-display">• Carregando...</span>
+    </div>
+    
+    <div class="data-card">
+      <div class="data-title">Status da Conexão</div>
+      <div class="data-value" id="mensagem-display">Aguardando dados...</div>
+    </div>
+    
+    <div class="footer">⏱️ Conexão via API Rest</div>
+  </div>
+
+  <script>
+    // Função que busca os dados do ESP32 sem recarregar a página
+    function buscarDados() {
+      fetch('/dados')
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById('ip-display').innerHTML = '• ' + data.ip;
+          document.getElementById('mensagem-display').innerHTML = data.mensagem;
+        })
+        .catch(error => console.error('Erro na comunicação com o ESP32:', error));
+    }
+
+    // Executa imediatamente ao abrir e depois a cada 1000ms (1 segundo)
+    buscarDados();
+    setInterval(buscarDados, 1000);
+  </script>
+</body>
+</html>

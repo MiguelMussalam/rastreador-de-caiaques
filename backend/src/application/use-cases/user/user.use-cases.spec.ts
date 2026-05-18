@@ -22,7 +22,6 @@ const makeUser = (overrides: Partial<User> = {}): User => ({
 const makeMockRepo = (): jest.Mocked<IUserRepository> => ({
   create: jest.fn(),
   findById: jest.fn(),
-  findByUsername: jest.fn(),
   findAll: jest.fn(),
   update: jest.fn(),
   delete: jest.fn(),

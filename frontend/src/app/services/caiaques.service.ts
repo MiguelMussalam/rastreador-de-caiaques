@@ -1,6 +1,8 @@
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, timer, switchMap, shareReplay } from 'rxjs';
+import { Injectable, OnDestroy } from '@angular/core';
+import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
+import { BehaviorSubject, Observable, timer } from 'rxjs';
+import { retry } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 
 export interface PontoRota {
   lat: number;
@@ -21,20 +23,63 @@ export interface CaiaqueResponse {
   caiaques: Caiaque[];
 }
 
-@Injectable({
-  providedIn: 'root'
-})
-export class CaiaqueService {
+interface PosicaoDto {
+  id: number;
+  lat: number | null;
+  lng: number | null;
+}
 
-  private readonly API_URL = 'assets/mock/caiaques.json';
-  private readonly POLLING_INTERVAL = 10000;
+@Injectable({ providedIn: 'root' })
+export class CaiaqueService implements OnDestroy {
 
-  caiaques$: Observable<CaiaqueResponse>;
+  private readonly WS_URL = environment.backendWsUrl;
 
-  constructor(private http: HttpClient) {
-    this.caiaques$ = timer(0, this.POLLING_INTERVAL).pipe(
-      switchMap(() => this.http.get<CaiaqueResponse>(this.API_URL)),
-      shareReplay(1)
-    );
+  private socket$: WebSocketSubject<PosicaoDto>;
+
+  // Estado interno: um Map por ID de caiaque
+  private estado = new Map<number, Caiaque>();
+  private subject$$ = new BehaviorSubject<CaiaqueResponse>({ caiaques: [] });
+
+  caiaques$: Observable<CaiaqueResponse> = this.subject$$.asObservable();
+
+  constructor() {
+    this.socket$ = webSocket<PosicaoDto>({
+      url: this.WS_URL,
+      deserializer: msg => {
+        console.log('[LoRa] Raw:', msg.data); // string bruta antes do parse
+        return JSON.parse(msg.data) as PosicaoDto;
+      }
+    });
+
+    this.socket$.pipe(
+      retry({
+        delay: (_, tentativa) => {
+          console.warn(`Reconectando ao ESP32 (tentativa ${tentativa})...`);
+          return timer(5000);
+        }
+      })
+    ).subscribe({
+      next: pos => {
+        console.log('[LoRa] Recebido:', pos); // objeto já parseado
+
+        if (pos.id == null || pos.lat == null || pos.lng == null) return;
+
+        this.estado.set(pos.id, {
+          id:                pos.id,
+          nome:              `Caiaque ${pos.id}`,
+          lat:               pos.lat,
+          lng:               pos.lng,
+          ultimaAtualizacao: new Date().toISOString(),
+          rota:              this.estado.get(pos.id)?.rota ?? []
+        });
+
+        this.subject$$.next({ caiaques: [...this.estado.values()] });
+      },
+      error: err => console.error('[WS] Erro:', err)
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.socket$.complete();
   }
 }

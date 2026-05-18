@@ -42,7 +42,7 @@ const makeMockTrackingRepo = (): jest.Mocked<ITrackingPointRepository> => ({
 const makeMockKayakRepo = (): jest.Mocked<IKayakRepository> => ({
   create: jest.fn(),
   findById: jest.fn(),
-  findByCode: jest.fn(),
+  findByDeviceId: jest.fn(),
   findAll: jest.fn(),
   findByStatus: jest.fn(),
   update: jest.fn(),

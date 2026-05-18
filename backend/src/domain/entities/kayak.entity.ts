@@ -9,6 +9,7 @@ export class Kayak {
   id: string
   code: string
   name: string
+  deviceId?: number
   status: KayakStatus
   active: boolean
   createdAt: Date

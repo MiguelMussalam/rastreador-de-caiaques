@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: rastreador-caiaques-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install && npx prisma generate && npx prisma db push && npm run build
+    startCommand: node dist/main
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: NODE_ENV
+        value: production
