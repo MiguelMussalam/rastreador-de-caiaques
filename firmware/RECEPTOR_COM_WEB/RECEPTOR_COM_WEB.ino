@@ -10,12 +10,15 @@
 const char* SSID     = "iPhone";
 const char* PASSWORD = "pedro123";
 
-const char* BACKEND_URL = "https://rastreador-de-caiaques.onrender.com/api/tracking";
+const char* BACKEND_URL   = "https://rastreador-de-caiaques.onrender.com/api/tracking";
+const char* HEARTBEAT_URL = "https://rastreador-de-caiaques.onrender.com/api/tracking/heartbeat";
 // ============================================================
 
 LoRa_E32 e32ttl(&Serial2, 15, 4, 5);
-
 WiFiClientSecure secureClient;
+
+unsigned long ultimoHeartbeat = 0;
+const unsigned long INTERVALO_HEARTBEAT = 10000; // 10s
 
 void setup() {
   Serial.begin(115200);
@@ -39,8 +42,19 @@ void setup() {
   Serial.println();
   Serial.println("WiFi conectado: " + WiFi.localIP().toString());
 
-  // Desabilita verificação SSL (adequado para TCC/desenvolvimento)
   secureClient.setInsecure();
+}
+
+void enviarHeartbeat() {
+  if (WiFi.status() != WL_CONNECTED) return;
+
+  HTTPClient http;
+  http.begin(secureClient, HEARTBEAT_URL);
+  http.setTimeout(30000);
+  int code = http.GET();
+  http.end();
+
+  Serial.println(code > 0 ? "[HB] OK" : "[HB] Falhou");
 }
 
 void enviarAoBackend(const String& json) {
@@ -52,6 +66,7 @@ void enviarAoBackend(const String& json) {
   HTTPClient http;
   http.begin(secureClient, BACKEND_URL);
   http.addHeader("Content-Type", "application/json");
+  http.setTimeout(30000);
 
   int httpCode = http.POST(json);
 
@@ -65,6 +80,13 @@ void enviarAoBackend(const String& json) {
 }
 
 void loop() {
+  // Heartbeat independente — avisa o site que a base está online
+  if (millis() - ultimoHeartbeat >= INTERVALO_HEARTBEAT) {
+    ultimoHeartbeat = millis();
+    enviarHeartbeat();
+  }
+
+  // Recebe posição dos caiaques via LoRa
   if (e32ttl.available() > 1) {
     ResponseContainer rs = e32ttl.receiveMessage();
 
