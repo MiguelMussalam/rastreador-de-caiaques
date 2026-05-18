@@ -52,6 +52,7 @@ void enviarAoBackend(const String& json) {
   HTTPClient http;
   http.begin(secureClient, BACKEND_URL);
   http.addHeader("Content-Type", "application/json");
+  http.setTimeout(30000); // 30s para aguentar o cold start do Render
 
   int httpCode = http.POST(json);
 
