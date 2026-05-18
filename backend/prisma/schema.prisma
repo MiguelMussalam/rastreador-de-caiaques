@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Kayak {
+  id        String        @id @default(uuid())
+  code      String        @unique
+  name      String
+  deviceId  Int?          @unique
+  status    KayakStatus   @default(AVAILABLE)
+  active    Boolean       @default(true)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  points    TrackingPoint[]
+}
+
+model TrackingPoint {
+  id           String   @id @default(uuid())
+  kayakId      String
+  latitude     Float
+  longitude    Float
+  speedKmh     Float?
+  batteryLevel Float?
+  recordedAt   DateTime @default(now())
+  kayak        Kayak    @relation(fields: [kayakId], references: [id], onDelete: Cascade)
+
+  @@index([kayakId])
+  @@index([kayakId, recordedAt])
+}
+
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  password  String
+  role      UserRole @default(OPERATOR)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum KayakStatus {
+  AVAILABLE
+  IN_USE
+  MAINTENANCE
+  ALERT
+}
+
+enum UserRole {
+  ADMIN
+  OPERATOR
+}

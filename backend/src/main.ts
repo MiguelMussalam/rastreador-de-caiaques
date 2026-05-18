@@ -1,9 +1,11 @@
 import { NestFactory } from '@nestjs/core'
 import { AppModule } from './app.module'
 import { WsAdapter } from '@nestjs/platform-ws'
+import { GlobalExceptionFilter } from './presentation/middlewares/exception.filter'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
+  app.useGlobalFilters(new GlobalExceptionFilter())
 
   app.setGlobalPrefix('api')
   app.useWebSocketAdapter(new WsAdapter(app))

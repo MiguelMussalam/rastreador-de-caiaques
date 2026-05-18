@@ -8,8 +8,8 @@ export class TrackingController {
 
   @Post()
   @HttpCode(HttpStatus.OK)
-  ingerir(@Body() dto: PosicaoDto) {
-    this.trackingService.ingerir(dto)
+  async ingerir(@Body() dto: PosicaoDto) {
+    await this.trackingService.ingerir(dto)
     return { ok: true }
   }
 
